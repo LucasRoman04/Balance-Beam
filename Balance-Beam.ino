@@ -10,12 +10,12 @@ float distance = 0;
 float error = 0;
 float prevError = 0;
 int maxSteps = 50;
-int steps = 0;
+int steps = 50;
 unsigned long previousMillis = 0;
 const long interval = 100;  // Interval in milliseconds
 
 //pid values
-float kp = 2;
+float kp = 1;
 float ki = 0;
 float kd = 0;
 
@@ -33,7 +33,6 @@ AF_Stepper motor(200, 2);
 void setup() {
   Serial.begin(115200);
   Serial.println("Stepper test!");
-
   motor.setSpeed(50);
 }
 
@@ -60,23 +59,21 @@ void loop() {
 
   pid_total = pid_p + pid_i + pid_d;
 
-  // pid_total = constrain(pid_total, -50, 50);
-
-  steps += pid_total;
-
   steps = constrain(steps, -maxSteps, maxSteps);
 
   if (distance < SETPOINT && steps < maxSteps) {
-    // motor.step(pid_total, FORWARD);
+    motor.step(1, FORWARD);
+    steps++;
   } else if (distance > SETPOINT && steps > -maxSteps) {
-    // motor.step(pid_total, BACKWARD);
+    motor.step(1, BACKWARD);
+    steps--;
   } else {
   }
 
-  Serial.print("Steps: ");
-  Serial.println(steps);
-  // Serial.print("PID: ");
-  // Serial.println(pid_total);
+  // Serial.print("Steps: ");
+  // Serial.println(steps);
+  Serial.print("PID: ");
+  Serial.println(pid_total);
 }
 
 void measureDistance() {
