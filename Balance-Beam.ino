@@ -9,7 +9,7 @@
 float distance = 0;
 float error = 0;
 int maxSteps = 50;
-int stepsMoved = 50;
+int steps = 50;
 unsigned long previousMillis = 0;
 const long interval = 100;  // Interval in milliseconds
 
@@ -38,16 +38,16 @@ void loop() {
 
   error = distance - SETPOINT;
 
-  if (distance < SETPOINT && stepsMoved < maxSteps) {       
-    motor.step(1, BACKWARD);       
-    stepsMoved++;     
-  } else if (distance > SETPOINT && stepsMoved > -maxSteps) {       
+  if (distance < SETPOINT && steps < maxSteps) {       
     motor.step(1, FORWARD);       
-    stepsMoved--;     
+    steps++;     
+  } else if (distance > SETPOINT && steps > -maxSteps) {       
+    motor.step(1, BACKWARD);       
+    steps--;     
    } else {
   }
 
-  // Serial.println(stepsMoved);
+  Serial.println(steps);
 
 }
 
