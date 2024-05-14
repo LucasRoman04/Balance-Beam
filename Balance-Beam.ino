@@ -4,18 +4,19 @@
 #define TRIGGER_PIN 12
 #define ECHO_PIN 11
 #define MAX_DISTANCE 200
-#define SETPOINT 10
+#define SETPOINT 9
 
 float distance = 0;
 float error = 0;
 float prevError = 0;
-int maxSteps = 50;
-int steps = 50;
+int highSteps = 100;
+int steps = 0;
+int lowSteps = 0;
 unsigned long previousMillis = 0;
 const long interval = 100;  // Interval in milliseconds
 
 //pid values
-float kp = 1;
+float kp = 1.8;
 float ki = 0;
 float kd = 0;
 
@@ -43,37 +44,41 @@ void loop() {
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
     measureDistance();
+
+
+    error = distance - SETPOINT;
+    pid_p = error * kp;
+    float distanceDifference = error - prevError;
+    pid_d = kd * ((error - prevError) / interval);
+
+    //if centered dont add i or it will drift
+    // if (error > -3 && error < 3) {
+    //   pid_i = pid_i + (ki * error);
+    // } else {
+    //   pid_i = 0;
+    // }
+
+    pid_total = pid_p + pid_i + pid_d;
+    prevError = error;
+
+    if (distance < SETPOINT && steps > lowSteps) {
+      steps += pid_total;
+      // motor.step(abs(pid_total), FORWARD);      
+    } else if (distance > SETPOINT && steps < highSteps) {
+      steps += pid_total;
+      // motor.step(abs(pid_total), BACKWARD);
+    } else if (distance < 10.5 && distance > 7.5) {
+      // motor.release();
+      // delay(800);
+    }
+
+    steps = constrain(steps, lowSteps, highSteps);
   }
 
-  error = distance - SETPOINT;
-  pid_p = error * kp;
-  float distanceDifference = error - prevError;
-  pid_d = kd * ((error - prevError) / interval);
-
-  //if centered dont add i or it will drift
-  if (error > -3 && error < 3) {
-    pid_i = pid_i + (ki * error);
-  } else {
-    pid_i = 0;
-  }
-
-  pid_total = pid_p + pid_i + pid_d;
-
-  steps = constrain(steps, -maxSteps, maxSteps);
-
-  if (distance < SETPOINT && steps < maxSteps) {
-    motor.step(1, FORWARD);
-    steps++;
-  } else if (distance > SETPOINT && steps > -maxSteps) {
-    motor.step(1, BACKWARD);
-    steps--;
-  } else {
-  }
-
-  // Serial.print("Steps: ");
-  // Serial.println(steps);
-  Serial.print("PID: ");
-  Serial.println(pid_total);
+  Serial.print("Steps: ");
+  Serial.println(steps);
+  // Serial.print("PID: ");
+  // Serial.println(pid_total);
 }
 
 void measureDistance() {
